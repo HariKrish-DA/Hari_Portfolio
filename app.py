@@ -66,7 +66,7 @@ elif page == "Interactive CR Tracker":
     # Load the uploaded tracking data
     try:
         # Read the raw Total dataset
-        df = pd.read_csv("Portfolio presentation tracker.xlsx - Total.csv")
+        df = pd.read_csv("data.csv")
         
         # Clean data (keep relevant columns and drop empty rows)
         df = df[['Change Request', 'Description', 'CR type', 'Process', 'WF type', 'Date completed', 'Month']]
@@ -118,4 +118,4 @@ elif page == "Interactive CR Tracker":
             st.dataframe(df, use_container_width=True)
             
     except FileNotFoundError:
-        st.error("⚠️ Data file not found. Please ensure 'Portfolio presentation tracker.xlsx - Total.csv' is uploaded to your GitHub repository.")
+       st.error("⚠️ Data file not found. Please ensure 'data.csv' is uploaded to your GitHub repository.")
