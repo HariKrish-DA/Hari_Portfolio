@@ -66,7 +66,7 @@ elif page == "Interactive CR Tracker":
     # Load the uploaded tracking data
     try:
         # Read the raw Total dataset
-        df = pd.read_csv("Data.csv")
+        df = pd.read_csv("Data.csv", encoding="latin1")
         
         # Clean data (keep relevant columns and drop empty rows)
         df = df[['Change Request', 'Description', 'CR type', 'Process', 'WF type', 'Date completed', 'Month']]
