@@ -92,23 +92,22 @@ elif page == "Interactive CR Tracker":
         chart_col1, chart_col2 = st.columns(2)
         
         with chart_col1:
-            # 1. Chart based on CR type
+            # 1. Modules in SAP (Pie Chart)
             type_counts = df['CR type'].value_counts().reset_index()
             type_counts.columns = ['CR type', 'Count']
-            fig1 = px.pie(type_counts, names='CR type', values='Count', title="Distribution by CR Type", hole=0.4)
+            fig1 = px.pie(type_counts, names='CR type', values='Count', title="Modules in SAP", hole=0.4)
             st.plotly_chart(fig1, use_container_width=True)
             
         with chart_col2:
-            # 2. Bar chart on number of CRs completed in each month
-            # Grouping by the 'Month' column in your dataset
+            # 2. average number of process (Line Chart with Markers)
             month_counts = df.groupby('Month').size().reset_index(name='Total CRs')
-            fig2 = px.bar(month_counts, x='Month', y='Total CRs', title="CRs Completed per Month", color='Month', text='Total CRs')
+            fig2 = px.line(month_counts, x='Month', y='Total CRs', title="average number of process", markers=True)
             st.plotly_chart(fig2, use_container_width=True)
             
         st.markdown("---")
         
         # Visualizations Row 2: Interactive Process Filter
-        st.subheader("Volume by Process Type")
+        st.subheader("Areas of expertise in SAP")
         st.write("Use the filter below to select specific processes you want to analyze.")
         
         # Create a list of all unique processes
@@ -127,11 +126,58 @@ elif page == "Interactive CR Tracker":
             process_counts = filtered_df['Process'].value_counts().reset_index()
             process_counts.columns = ['Process', 'Count']
             
-            fig3 = px.bar(process_counts, x='Process', y='Count', title="Filtered Process Volume", color='Process', text='Count')
+            fig3 = px.bar(process_counts, x='Process', y='Count', title="Areas of expertise in SAP", color='Process', text='Count')
             fig3.update_traces(textposition='outside')
             st.plotly_chart(fig3, use_container_width=True)
         else:
             st.warning("⚠️ Please select at least one process from the dropdown menu to view the chart.")
+            
+        st.markdown("---")
+        
+        # ==========================================
+        # NEW SECTION: INTERACTIVE GLOBE CHART
+        # ==========================================
+        st.subheader("Global Reach & Supported Regions")
+        st.write("Regions and markets managed across global Master Data operations.")
+        
+        # Define the regions worked with (Mapped Chugai to Japan)
+        regions_list = [
+            "United States", "Canada", "Mexico", "Brazil", "Costa Rica", 
+            "Argentina", "Germany", "Switzerland", "Austria", "Poland", 
+            "Spain", "China", "Japan", "India", "Singapore", 
+            "Australia", "New Zealand"
+        ]
+        
+        # Create a DataFrame for Plotly to read
+        globe_df = pd.DataFrame({
+            "Country": regions_list,
+            "Worked": [1] * len(regions_list) # Dummy variable to color the map
+        })
+        
+        # Create the 3D orthographic globe using Choropleth
+        fig_globe = px.choropleth(
+            globe_df,
+            locations="Country",
+            locationmode="country names",
+            color="Worked",
+            hover_name="Country",
+            projection="orthographic", # This makes it a 3D globe!
+            color_continuous_scale="Viridis" # A professional color scheme
+        )
+        
+        # Clean up the look of the globe
+        fig_globe.update_layout(
+            coloraxis_showscale=False, # Hide the color legend
+            geo=dict(
+                showocean=True, oceancolor="#cce5ff", # Light blue oceans
+                showland=True, landcolor="#f2f2f2",   # Grey land for non-selected
+                showlakes=False,
+                projection_rotation=dict(lon=-45, lat=20, roll=0) # Starts facing North America/Europe
+            ),
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig_globe, use_container_width=True)
         
         # Expandable Raw Data Table
         with st.expander("🔍 View Raw Tracker Data"):
