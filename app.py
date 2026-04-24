@@ -2,15 +2,19 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# ==========================================
+# PAGE CONFIGURATION
+# ==========================================
 st.set_page_config(page_title="Hari Krishnan Kumaran Portfolio", layout="wide")
 
-# Sidebar Navigation & Contact
+# ==========================================
+# SIDEBAR NAVIGATION
+# ==========================================
 st.sidebar.title("Hari Krishnan Kumaran")
 st.sidebar.write("📍 Master Data Professional")
 st.sidebar.write("🎓 Education: Conestoga College")
 st.sidebar.markdown("---")
 
-# Navigation Menu
 page = st.sidebar.radio("Navigate Dashboard", ["Professional Summary", "Interactive CR Tracker"])
 st.sidebar.markdown("---")
 st.sidebar.button("How can I help you?")
@@ -63,19 +67,32 @@ elif page == "Interactive CR Tracker":
     st.title("Performance & CR Tracker Dashboard")
     st.write("Explore my workflow productivity, Change Requests (CRs), and process distributions interactively.")
     
-    # Load the uploaded tracking data
     try:
-        # Read the raw Total dataset
+        # 1. Read the dataset with robust error handling
+        # Using exact file name requested: "Data.csv"
         df = pd.read_csv("Data.csv", encoding="latin1", engine="python", on_bad_lines="skip")
         
-        # Clean data (keep relevant columns and drop empty rows)
-        df = df[['Change Request', 'Description', 'CR type', 'Process', 'WF type', 'Date completed', 'Month']]
+        # 2. Clean up column names by removing any hidden spaces
+        df.columns = df.columns.str.strip()
+        
+        # 3. Define the exact columns we want to look for
+        desired_columns = ['Change Request', 'Description', 'CR type', 'Process', 'WF type', 'Date completed', 'Month']
+        
+        # 4. Check if all columns exist; if not, show exactly what the file actually has
+        missing_cols = [col for col in desired_columns if col not in df.columns]
+        if missing_cols:
+            st.error(f"Missing columns: {missing_cols}")
+            st.info(f"The columns actually found in your Data.csv file are: {df.columns.tolist()}")
+            st.stop() # Stops the rest of the code from crashing so you can read the message
+            
+        # 5. Clean data (keep relevant columns and drop empty rows)
+        df = df[desired_columns]
         df.dropna(subset=['Change Request', 'CR type'], inplace=True)
         
         # Calculate Top-Level KPIs
         total_crs = len(df)
-        top_cr_type = df['CR type'].mode()[0]
-        top_process = df['Process'].mode()[0]
+        top_cr_type = df['CR type'].mode()[0] if not df.empty else "N/A"
+        top_process = df['Process'].mode()[0] if not df.empty else "N/A"
         
         # Display KPIs
         st.markdown("### Overview Metrics")
@@ -118,4 +135,6 @@ elif page == "Interactive CR Tracker":
             st.dataframe(df, use_container_width=True)
             
     except FileNotFoundError:
-       st.error("⚠️ Data file not found. Please ensure 'data.csv' is uploaded to your GitHub repository.")
+        st.error("⚠️ Data file not found. Please ensure your file is named exactly 'Data.csv' (with a capital D) and uploaded to your GitHub repository.")
+    except Exception as e:
+        st.error(f"⚠️ An unexpected error occurred while reading the data: {e}")
