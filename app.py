@@ -88,32 +88,50 @@ elif page == "Interactive CR Tracker":
         
         st.markdown("---")
         
-        # Visualizations Row
+        # Visualizations Row 1: CR Type & Monthly Completions
         chart_col1, chart_col2 = st.columns(2)
         
         with chart_col1:
-            # Pie chart for CR Type
+            # 1. Chart based on CR type
             type_counts = df['CR type'].value_counts().reset_index()
             type_counts.columns = ['CR type', 'Count']
             fig1 = px.pie(type_counts, names='CR type', values='Count', title="Distribution by CR Type", hole=0.4)
             st.plotly_chart(fig1, use_container_width=True)
             
         with chart_col2:
-            # Bar chart for Processes
-            process_counts = df['Process'].value_counts().reset_index()
-            process_counts.columns = ['Process', 'Count']
-            fig2 = px.bar(process_counts, x='Process', y='Count', title="Volume by Process Type", color='Process')
+            # 2. Bar chart on number of CRs completed in each month
+            # Grouping by the 'Month' column in your dataset
+            month_counts = df.groupby('Month').size().reset_index(name='Total CRs')
+            fig2 = px.bar(month_counts, x='Month', y='Total CRs', title="CRs Completed per Month", color='Month', text='Total CRs')
             st.plotly_chart(fig2, use_container_width=True)
+            
+        st.markdown("---")
         
-        # Time Series / Trend Line
-        st.subheader("Workflow Completion Trend")
-        df['Date completed'] = pd.to_datetime(df['Date completed'], errors='coerce')
-        trend_df = df.groupby('Date completed').size().reset_index(name='Daily CRs')
+        # Visualizations Row 2: Interactive Process Filter
+        st.subheader("Volume by Process Type")
+        st.write("Use the filter below to select specific processes you want to analyze.")
         
-        fig3 = px.line(trend_df, x='Date completed', y='Daily CRs', title="Daily Change Requests Completed", markers=True)
-        fig3.update_xaxes(title="Date")
-        fig3.update_yaxes(title="CRs Completed")
-        st.plotly_chart(fig3, use_container_width=True)
+        # Create a list of all unique processes
+        all_processes = df['Process'].dropna().unique().tolist()
+        
+        # 3. Interactive Filter / Dropdown for Process
+        selected_processes = st.multiselect(
+            "Select Processes to View:", 
+            options=all_processes, 
+            default=all_processes # Show all by default
+        )
+        
+        # Only draw the chart if at least one process is selected
+        if selected_processes:
+            filtered_df = df[df['Process'].isin(selected_processes)]
+            process_counts = filtered_df['Process'].value_counts().reset_index()
+            process_counts.columns = ['Process', 'Count']
+            
+            fig3 = px.bar(process_counts, x='Process', y='Count', title="Filtered Process Volume", color='Process', text='Count')
+            fig3.update_traces(textposition='outside')
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.warning("⚠️ Please select at least one process from the dropdown menu to view the chart.")
         
         # Expandable Raw Data Table
         with st.expander("🔍 View Raw Tracker Data"):
