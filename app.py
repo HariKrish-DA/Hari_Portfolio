@@ -70,7 +70,7 @@ elif page == "Interactive CR Tracker":
     try:
         # 1. Read the dataset with robust error handling
         # Using exact file name requested: "Data.csv"
-        df = pd.read_csv("Data.csv", encoding="latin1", engine="python", on_bad_lines="skip")
+        df = pd.read_csv("Data.csv", encoding="latin1", engine="python", on_bad_lines="skip", sep=";")
         
         # 2. Clean up column names by removing any hidden spaces
         df.columns = df.columns.str.strip()
