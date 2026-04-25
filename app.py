@@ -1,132 +1,192 @@
+import streamlit as st
 import pandas as pd
-import numpy as np
-import xlsxwriter
+import plotly.express as px
 
-# 1. Load the raw data
-df = pd.read_csv('Portfolio presentation tracker.xlsx - Total.csv')
-df = df.dropna(subset=['Change Request']).copy()
-df['Date completed'] = pd.to_datetime(df['Date completed'], errors='coerce')
+# ==========================================
+# PAGE CONFIGURATION
+# ==========================================
+st.set_page_config(page_title="Hari Krishnan Kumaran Portfolio", layout="wide")
 
-# 2. Clean and Add Region column based on user list
-regions_raw = """TURKEY\nGREECE\nGREECE \nMOROCCO \nNETHERLANDS\nSWEDEN\nNORWAY\nFINLAND\nSOUTHAFRICA\nAUSTRIA\nSWITZERLAND\nCZECH REPUBLIC  \nSLOVAKIA \npOLAND\nSLOVENIA\nHUNGARY\nROMANIA\n SERBIA\nLITHUANIA\nESTONIA\nLATVIA\nUKRAINE\nRUSSIA\nUnited kingdom\nGreenland\nSweden \nfinland\nNorway"""
+# ==========================================
+# SIDEBAR NAVIGATION
+# ==========================================
+st.sidebar.title("Hari Krishnan Kumaran")
+st.sidebar.write("📍 Master Data Professional")
+st.sidebar.write("🎓 Education: Conestoga College")
+st.sidebar.markdown("---")
 
-regions_list = list(set([r.strip().upper() for r in regions_raw.split('\n') if r.strip()]))
+page = st.sidebar.radio("Navigate Dashboard", ["Professional Summary", "Interactive CR Tracker"])
+st.sidebar.markdown("---")
+st.sidebar.button("How can I help you?")
 
-# Assign regions to the data rows
-np.random.seed(42)
-df['Region'] = np.random.choice(regions_list, size=len(df))
+# ==========================================
+# PAGE 1: PROFESSIONAL SUMMARY
+# ==========================================
+if page == "Professional Summary":
+    st.title("Interactive Professional Portfolio")
+    col1, col2, col3 = st.columns(3)
 
-# 3. Calculate KPIs
-total_wfs = len(df)
-max_date = df['Date completed'].max()
-wfs_today = len(df[df['Date completed'] == max_date])
+    with col1:
+        st.metric("Inventory Discrepancy", "-25%", delta_color="normal")
+    with col2:
+        st.metric("ERP Systems", "SAP, NetSuite, S4")
+    with col3:
+        st.metric("Total Experience", "3.5+ Years")
 
-df['YearMonth'] = df['Date completed'].dt.to_period('M').astype(str)
-distinct_months = df['YearMonth'].nunique()
-avg_wfs_per_month = total_wfs / distinct_months if distinct_months > 0 else 0
+    # Experience Tabs
+    tab1, tab2, tab3 = st.tabs(["Kenvue (J&J)", "Arctic Wolf", "Roche/Genentech"])
 
-# 4. Prepare Chart Data (Including New Region Pivot)
-cr_type_pivot = pd.crosstab(df['YearMonth'], df['CR type']).reset_index()
+    with tab1:
+        st.header("Supply Planning & Master Data Analyst")
+        st.write("**Brands:** Tylenol, Motrin")
+        st.write("- Supported SAP, MDG, and data migration for ERP transition.")
+        st.write("- Developed Win Shuttle script to facilitate automation.")
+        st.write("- Implemented KANBAN to avoid production impacts.")
 
-mdg_df = df[df['CR type'] == 'MDG']
-process_pivot = mdg_df['Process'].value_counts().reset_index()
-process_pivot.columns = ['Process', 'Count']
+    with tab2:
+        st.header("Supply Chain Specialist")
+        st.write("**Focus:** Geo-visualization & 3PL Integration")
+        st.write("- Integrated 3PL with company's ERP (NetSuite).")
+        st.write("- Implemented RMA tracker to avoid excess procurement.")
+        
+        # Visualizing the 25% improvement
+        chart_data = pd.DataFrame({'Status': ['Before', 'After'], 'Discrepancy': [100, 75]})
+        fig = px.bar(chart_data, x='Status', y='Discrepancy', title="Inventory Discrepancy Reduction")
+        st.plotly_chart(fig)
 
-last_7_days = sorted(df['Date completed'].dropna().unique())[-7:]
-weekly_df = df[df['Date completed'].isin(last_7_days)].copy()
-weekly_df['DateStr'] = weekly_df['Date completed'].dt.strftime('%Y-%m-%d')
-weekly_pivot = pd.crosstab(weekly_df['DateStr'], weekly_df['CR type']).reset_index()
+    with tab3:
+        st.header("Associate Master Data Specialist")
+        st.write("- Supported 106 plants S4 go live hypercare.")
+        st.write("- Maintaining Master data for 117 DC plants, 21 Manufacturing plants, and 38 CMO plants.")
+        st.write("- Developed automated verification using Macros to reduce SLAs.")
+        st.write("- Implemented a plugin based file to identify the background changes during deployment.")
 
-# Region Aggregation
-region_pivot = df['Region'].value_counts().reset_index()
-region_pivot.columns = ['Region', 'Count']
-
-# 5. Create the Excel workbook
-writer = pd.ExcelWriter('Interactive_Portfolio_Dashboard_with_Regions.xlsx', engine='xlsxwriter')
-workbook = writer.book
-
-# --- DASHBOARD SHEET ---
-worksheet_dash = workbook.add_worksheet('Dashboard')
-worksheet_dash.hide_gridlines(2)
-
-# Formats
-title_fmt = workbook.add_format({'bold': True, 'font_size': 20, 'bg_color': '#1F497D', 'font_color': 'white', 'align': 'center', 'valign': 'vcenter'})
-kpi_label_fmt = workbook.add_format({'bold': True, 'font_size': 12, 'bg_color': '#DCE6F1', 'align': 'center', 'border': 1})
-kpi_val_fmt = workbook.add_format({'bold': True, 'font_size': 16, 'align': 'center', 'border': 1})
-
-# Title & KPIs
-worksheet_dash.merge_range('B2:O4', 'PERFORMANCE DASHBOARD (WITH REGIONS)', title_fmt)
-worksheet_dash.write('C6', 'Total num of WFs', kpi_label_fmt)
-worksheet_dash.write('C7', total_wfs, kpi_val_fmt)
-worksheet_dash.write('F6', 'WFs completed today', kpi_label_fmt)
-worksheet_dash.write('F7', wfs_today, kpi_val_fmt)
-worksheet_dash.write('I6', 'Average WFs per month', kpi_label_fmt)
-worksheet_dash.write('I7', round(avg_wfs_per_month, 2), kpi_val_fmt)
-
-# --- CHART DATA SHEET ---
-worksheet_data = workbook.add_worksheet('Chart Data')
-cr_type_pivot.to_excel(writer, sheet_name='Chart Data', startrow=0, startcol=0, index=False)
-process_pivot.to_excel(writer, sheet_name='Chart Data', startrow=0, startcol=5, index=False)
-weekly_pivot.to_excel(writer, sheet_name='Chart Data', startrow=0, startcol=10, index=False)
-region_pivot.to_excel(writer, sheet_name='Chart Data', startrow=0, startcol=15, index=False)
-
-# --- ADD CHARTS ---
-# Chart 1: MDG vs Make CRs
-chart1 = workbook.add_chart({'type': 'column', 'subtype': 'stacked'})
-for i, col in enumerate(cr_type_pivot.columns[1:]):
-    chart1.add_series({
-        'name':       ['Chart Data', 0, i+1],
-        'categories': ['Chart Data', 1, 0, len(cr_type_pivot), 0],
-        'values':     ['Chart Data', 1, i+1, len(cr_type_pivot), i+1],
-    })
-chart1.set_title({'name': 'Monthly Trend: MDG vs Make vs Mass'})
-chart1.set_size({'width': 500, 'height': 300})
-worksheet_dash.insert_chart('B10', chart1)
-
-# Chart 2: MDG Process Types
-chart2 = workbook.add_chart({'type': 'bar'})
-chart2.add_series({
-    'name':       'Processes',
-    'categories': ['Chart Data', 1, 5, len(process_pivot), 5],
-    'values':     ['Chart Data', 1, 6, len(process_pivot), 6],
-})
-chart2.set_title({'name': 'MDG Process Types'})
-chart2.set_legend({'none': True})
-chart2.set_size({'width': 400, 'height': 300})
-worksheet_dash.insert_chart('J10', chart2)
-
-# Chart 3: Regions (NEW)
-chart_region = workbook.add_chart({'type': 'bar'})
-chart_region.add_series({
-    'name':       'Regions',
-    'categories': ['Chart Data', 1, 15, len(region_pivot), 15],
-    'values':     ['Chart Data', 1, 16, len(region_pivot), 16],
-})
-chart_region.set_title({'name': 'Change Requests by Region'})
-chart_region.set_legend({'none': True})
-chart_region.set_size({'width': 350, 'height': 620}) 
-worksheet_dash.insert_chart('P10', chart_region)
-
-# Chart 4: Weekly CRs Comparison
-chart3 = workbook.add_chart({'type': 'column'})
-for i, col in enumerate(weekly_pivot.columns[1:]):
-    chart3.add_series({
-        'name':       ['Chart Data', 0, 10+i+1],
-        'categories': ['Chart Data', 1, 10, len(weekly_pivot), 10],
-        'values':     ['Chart Data', 1, 10+i+1, len(weekly_pivot), 10+i+1],
-    })
-chart3.set_title({'name': 'Weekly CRs Comparison (Last 7 Days)'})
-chart3.set_size({'width': 900, 'height': 300})
-worksheet_dash.insert_chart('B26', chart3)
-
-# --- RAW DATA SHEET ---
-raw_sheet_name = 'Raw Data'
-df_clean = df.drop(columns=['YearMonth'])
-df_clean.to_excel(writer, sheet_name=raw_sheet_name, index=False)
-
-# Format the Raw Data table to be easily filterable
-worksheet_raw = writer.sheets[raw_sheet_name]
-worksheet_raw.autofilter(0, 0, len(df_clean), len(df_clean.columns)-1)
-worksheet_raw.freeze_panes(1, 0) # Freeze header row
-
-writer.close()
+# ==========================================
+# PAGE 2: INTERACTIVE CR TRACKER
+# ==========================================
+elif page == "Interactive CR Tracker":
+    st.title("Performance & CR Tracker Dashboard")
+    st.write("Explore my workflow productivity, Change Requests (CRs), and process distributions interactively.")
+    
+    try:
+        # Load the perfect CSV
+        df = pd.read_csv("Data.csv")
+        
+        # Clean data (keep relevant columns and drop empty rows)
+        df.dropna(subset=['Change Request', 'CR type'], inplace=True)
+        
+        # Calculate Top-Level KPIs
+        total_crs = len(df)
+        top_cr_type = df['CR type'].mode()[0] if not df.empty else "N/A"
+        top_process = df['Process'].mode()[0] if not df.empty else "N/A"
+        
+        # Display KPIs
+        st.markdown("### Overview Metrics")
+        kpi1, kpi2, kpi3 = st.columns(3)
+        kpi1.metric("Total Change Requests (CRs)", f"{total_crs:,}")
+        kpi2.metric("Dominant CR Type", top_cr_type)
+        kpi3.metric("Top Process Handled", top_process)
+        
+        st.markdown("---")
+        
+        # Visualizations Row 1: CR Type & Monthly Completions
+        chart_col1, chart_col2 = st.columns(2)
+        
+        with chart_col1:
+            # 1. Modules in SAP (Pie Chart)
+            type_counts = df['CR type'].value_counts().reset_index()
+            type_counts.columns = ['CR type', 'Count']
+            fig1 = px.pie(type_counts, names='CR type', values='Count', title="Modules in SAP", hole=0.4)
+            st.plotly_chart(fig1, use_container_width=True)
+            
+        with chart_col2:
+            # 2. Average number of process (Line Chart with Markers)
+            month_counts = df.groupby('Month').size().reset_index(name='Total CRs')
+            fig2 = px.line(month_counts, x='Month', y='Total CRs', title="Average number of process", markers=True)
+            st.plotly_chart(fig2, use_container_width=True)
+            
+        st.markdown("---")
+        
+        # Visualizations Row 2: Interactive Process Filter
+        st.subheader("Areas of expertise in SAP")
+        st.write("Use the filter below to select specific processes you want to analyze.")
+        
+        # Create a list of all unique processes from the NEW data file
+        all_processes = df['Process'].dropna().unique().tolist()
+        
+        # 3. Interactive Filter / Dropdown for Process
+        selected_processes = st.multiselect(
+            "Select Processes to View:", 
+            options=all_processes, 
+            default=all_processes # Show all by default
+        )
+        
+        # Only draw the chart if at least one process is selected
+        if selected_processes:
+            filtered_df = df[df['Process'].isin(selected_processes)]
+            process_counts = filtered_df['Process'].value_counts().reset_index()
+            process_counts.columns = ['Process', 'Count']
+            
+            fig3 = px.bar(process_counts, x='Process', y='Count', title="Areas of expertise in SAP", color='Process', text='Count')
+            fig3.update_traces(textposition='outside')
+            st.plotly_chart(fig3, use_container_width=True)
+        else:
+            st.warning("⚠️ Please select at least one process from the dropdown menu to view the chart.")
+            
+        st.markdown("---")
+        
+        # ==========================================
+        # 2D WORLD MAP: GLOBAL REACH
+        # ==========================================
+        st.subheader("Global Reach & Supported Regions")
+        st.write("Regions and markets managed across global Master Data operations.")
+        
+        # Define the regions worked with (Added all newly requested regions and de-duplicated)
+        regions_list = [
+            "United States", "Canada", "Mexico", "Brazil", "Costa Rica", 
+            "Argentina", "Germany", "Switzerland", "Austria", "Poland", 
+            "Spain", "China", "Japan", "India", "Singapore", 
+            "Australia", "New Zealand", "Egypt", "South Africa", "Kenya", 
+            "Nigeria", "Hungary", "Croatia", "Bulgaria", "Romania", 
+            "Serbia", "Lithuania", "Turkey", "Greece", "Morocco", 
+            "Netherlands", "Sweden", "Norway", "Finland", "Czech Republic", 
+            "Slovakia", "Slovenia", "Estonia", "Latvia", "Ukraine", 
+            "Russia", "United Kingdom", "Greenland"
+        ]
+        
+        # Create a DataFrame for Plotly to read
+        map_df = pd.DataFrame({
+            "Country": regions_list,
+            "Worked": [1] * len(regions_list) # Dummy variable to color the map
+        })
+        
+        # Create the 2D world map using Choropleth
+        fig_map = px.choropleth(
+            map_df,
+            locations="Country",
+            locationmode="country names",
+            color="Worked",
+            hover_name="Country",
+            projection="natural earth", # This makes it a beautiful 2D flat map!
+            color_continuous_scale="Viridis" 
+        )
+        
+        # Clean up the look of the map
+        fig_map.update_layout(
+            coloraxis_showscale=False, # Hide the color legend
+            geo=dict(
+                showocean=True, oceancolor="#cce5ff", # Light blue oceans
+                showland=True, landcolor="#f2f2f2",   # Grey land for non-selected
+                showlakes=False
+            ),
+            margin=dict(l=0, r=0, t=0, b=0)
+        )
+        
+        st.plotly_chart(fig_map, use_container_width=True)
+        
+        # Expandable Raw Data Table
+        with st.expander("🔍 View Raw Tracker Data"):
+            st.dataframe(df, use_container_width=True)
+            
+    except Exception as e:
+        st.error(f"⚠️ Unable to load the tracker dashboard. Error: {e}")
