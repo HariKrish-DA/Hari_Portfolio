@@ -111,7 +111,7 @@ elif page == "Interactive CR Tracker":
         st.subheader("Areas of expertise in SAP")
         st.write("Use the filter below to select specific processes you want to analyze.")
         
-        # Create a list of all unique processes from the NEW data file
+        # Create a list of all unique processes from the data file
         all_processes = df['Process'].dropna().unique().tolist()
         
         # 3. Interactive Filter / Dropdown for Process
@@ -141,7 +141,7 @@ elif page == "Interactive CR Tracker":
         st.subheader("Global Reach & Supported Regions")
         st.write("Regions and markets managed across global Master Data operations.")
         
-        # Define the regions worked with (Added all newly requested regions and de-duplicated)
+        # Define the regions worked with (Russia removed, Middle East/Pakistan added)
         regions_list = [
             "United States", "Canada", "Mexico", "Brazil", "Costa Rica", 
             "Argentina", "Germany", "Switzerland", "Austria", "Poland", 
@@ -151,7 +151,8 @@ elif page == "Interactive CR Tracker":
             "Serbia", "Lithuania", "Turkey", "Greece", "Morocco", 
             "Netherlands", "Sweden", "Norway", "Finland", "Czech Republic", 
             "Slovakia", "Slovenia", "Estonia", "Latvia", "Ukraine", 
-            "Russia", "United Kingdom", "Greenland"
+            "United Kingdom", "Greenland", "Pakistan", "United Arab Emirates", 
+            "Qatar", "Saudi Arabia", "Israel", "Kuwait"
         ]
         
         # Create a DataFrame for Plotly to read
