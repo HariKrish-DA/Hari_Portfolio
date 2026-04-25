@@ -58,8 +58,8 @@ if page == "Professional Summary":
         st.header("Associate Master Data Specialist")
         st.write("- Supported 106 plants S4 go live hypercare.")
         st.write("- Maintaining Master data for 117 DC plants, 21 Manufacturing plants, and 38 CMO plants.")
-        st.write("- Developed dashboard to measure KPI.")
-        st.write("- Supported Make and PP module updates in SAP.")
+        st.write("- Developed automated verification using Macros to reduce SLAs.")
+        st.write("- Implemented a plugin based file to identify the background changes during deployment.")
 
 # ==========================================
 # PAGE 2: INTERACTIVE CR TRACKER
@@ -141,12 +141,14 @@ elif page == "Interactive CR Tracker":
         st.subheader("Global Reach & Supported Regions")
         st.write("Regions and markets managed across global Master Data operations.")
         
-        # Define the regions worked with (Mapped Chugai to Japan)
+        # Define the regions worked with (Added all newly requested regions)
         regions_list = [
             "United States", "Canada", "Mexico", "Brazil", "Costa Rica", 
             "Argentina", "Germany", "Switzerland", "Austria", "Poland", 
             "Spain", "China", "Japan", "India", "Singapore", 
-            "Australia", "New Zealand"
+            "Australia", "New Zealand", "Egypt", "South Africa", "Kenya", 
+            "Nigeria", "Hungary", "Croatia", "Bulgaria", "Romania", 
+            "Serbia", "Lithuania"
         ]
         
         # Create a DataFrame for Plotly to read
