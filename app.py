@@ -56,7 +56,8 @@ if page == "Professional Summary":
 
     with tab3:
         st.header("Associate Master Data Specialist")
-        st.write("- Supported S4 go-live hypercare.")
+        st.write("- Supported 106 plants S4 go live hypercare.")
+        st.write("- Maintaining Master data for 117 DC plants, 21 Manufacturing plants, and 38 CMO plants.")
         st.write("- Developed dashboard to measure KPI.")
         st.write("- Supported Make and PP module updates in SAP.")
 
@@ -99,9 +100,9 @@ elif page == "Interactive CR Tracker":
             st.plotly_chart(fig1, use_container_width=True)
             
         with chart_col2:
-            # 2. average number of process (Line Chart with Markers)
+            # 2. Average number of process (Line Chart with Markers)
             month_counts = df.groupby('Month').size().reset_index(name='Total CRs')
-            fig2 = px.line(month_counts, x='Month', y='Total CRs', title="average number of process", markers=True)
+            fig2 = px.line(month_counts, x='Month', y='Total CRs', title="Average number of process", markers=True)
             st.plotly_chart(fig2, use_container_width=True)
             
         st.markdown("---")
@@ -110,7 +111,7 @@ elif page == "Interactive CR Tracker":
         st.subheader("Areas of expertise in SAP")
         st.write("Use the filter below to select specific processes you want to analyze.")
         
-        # Create a list of all unique processes
+        # Create a list of all unique processes from the NEW data file
         all_processes = df['Process'].dropna().unique().tolist()
         
         # 3. Interactive Filter / Dropdown for Process
@@ -135,7 +136,7 @@ elif page == "Interactive CR Tracker":
         st.markdown("---")
         
         # ==========================================
-        # NEW SECTION: INTERACTIVE GLOBE CHART
+        # 2D WORLD MAP: GLOBAL REACH
         # ==========================================
         st.subheader("Global Reach & Supported Regions")
         st.write("Regions and markets managed across global Master Data operations.")
@@ -149,35 +150,34 @@ elif page == "Interactive CR Tracker":
         ]
         
         # Create a DataFrame for Plotly to read
-        globe_df = pd.DataFrame({
+        map_df = pd.DataFrame({
             "Country": regions_list,
             "Worked": [1] * len(regions_list) # Dummy variable to color the map
         })
         
-        # Create the 3D orthographic globe using Choropleth
-        fig_globe = px.choropleth(
-            globe_df,
+        # Create the 2D world map using Choropleth
+        fig_map = px.choropleth(
+            map_df,
             locations="Country",
             locationmode="country names",
             color="Worked",
             hover_name="Country",
-            projection="orthographic", # This makes it a 3D globe!
-            color_continuous_scale="Viridis" # A professional color scheme
+            projection="natural earth", # This makes it a beautiful 2D flat map!
+            color_continuous_scale="Viridis" 
         )
         
-        # Clean up the look of the globe
-        fig_globe.update_layout(
+        # Clean up the look of the map
+        fig_map.update_layout(
             coloraxis_showscale=False, # Hide the color legend
             geo=dict(
                 showocean=True, oceancolor="#cce5ff", # Light blue oceans
                 showland=True, landcolor="#f2f2f2",   # Grey land for non-selected
-                showlakes=False,
-                projection_rotation=dict(lon=-45, lat=20, roll=0) # Starts facing North America/Europe
+                showlakes=False
             ),
             margin=dict(l=0, r=0, t=0, b=0)
         )
         
-        st.plotly_chart(fig_globe, use_container_width=True)
+        st.plotly_chart(fig_map, use_container_width=True)
         
         # Expandable Raw Data Table
         with st.expander("🔍 View Raw Tracker Data"):
